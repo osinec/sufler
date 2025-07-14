@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Случайное аудио из видео</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+            color: #1db954;
+        }
+        
+        .equalizer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 150px;
+            margin: 40px 0;
+            gap: 8px;
+        }
+        
+        .bar {
+            width: 12px;
+            background: linear-gradient(to top, #1db954, #1ed760);
+            border-radius: 6px;
+            transition: height 0.1s ease-out;
+        }
+        
+        .video-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #282828;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        button {
+            background-color: #1db954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1ed760;
+        }
+        
+        .loading {
+            margin-top: 20px;
+            font-style: italic;
+            color: #b3b3b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Случайное аудио из видео</h1>
+        
+        <div class="equalizer" id="equalizer">
+            <!-- Будет заполнено JavaScript -->
+        </div>
+        
+        <div class="video-info">
+            <h2 id="video-title">Загрузка...</h2>
+            <p id="video-source"></p>
+            <div class="loading" id="loading-text">Идёт загрузка аудио...</div>
+        </div>
+        
+        <div class="controls">
+            <button id="play-btn">▶️ Слушать</button>
+            <button id="next-btn">🔀 Следующее</button>
+        </div>
+        
+        <audio id="audio-player" controls style="display: none;">
+            Ваш браузер не поддерживает аудио элементы.
+        </audio>
+    </div>
+
+    <script>
+        // Вставьте сюда свои ссылки на видео (YouTube, Vimeo и др.)
+        const videoLinks = [
+            {
+                title: "Лекция о науке",
+                url: "https://rutube.ru/shorts/ff8ded6bab396bbc45a0170c1b059840/"  // Замените на реальную ссылку
+            },
+            {
+                title: "Подкаст о технологиях",
+                url: "https://rutube.ru/shorts/ff8ded6bab396bbc45a0170c1b059840/"  // Замените на реальную ссылку
+            },
+            {
+                title: "Музыкальный клип",
+                url: "https://rutube.ru/shorts/ff8ded6bab396bbc45a0170c1b059840/"  // Замените на реальную ссылку
+            },
+            {
+                title: "Документальный фильм",
+                url: "https://rutube.ru/shorts/ff8ded6bab396bbc45a0170c1b059840/Y"  // Замените на реальную ссылку
+            }
+        ];
+
+        // Создаем эквалайзер (16 полос)
+        const equalizer = document.getElementById('equalizer');
+        for (let i = 0; i < 16; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '10px';
+            equalizer.appendChild(bar);
+        }
+        const bars = document.querySelectorAll('.bar');
+
+        // Аудио контекст и анализатор
+        let audioContext;
+        let analyser;
+        let source;
+        let dataArray;
+        
+        // Инициализация аудио
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
+            const player = document.getElementById('audio-player');
+            source = audioContext.createMediaElementSource(player);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            updateEqualizer();
+        }
+        
+        // Обновление эквалайзера
+        function updateEqualizer() {
+            if (!analyser) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            bars.forEach((bar, index) => {
+                const value = dataArray[index] / 255;
+                const height = value * 100 + 10;
+                bar.style.height = `${height}px`;
+            });
+            
+            requestAnimationFrame(updateEqualizer);
+        }
+        
+        // Получение случайного видео
+        function getRandomVideo() {
+            return videoLinks[Math.floor(Math.random() * videoLinks.length)];
+        }
+        
+        // Загрузка аудио из видео
+        function loadAudio(video) {
+            const player = document.getElementById('audio-player');
+            const titleElement = document.getElementById('video-title');
+            const sourceElement = document.getElementById('video-source');
+            const loadingElement = document.getElementById('loading-text');
+            
+            titleElement.textContent = video.title;
+            sourceElement.textContent = `Источник: ${video.url}`;
+            loadingElement.style.display = 'block';
+            
+            // Здесь нужно преобразовать видео в аудио поток
+            // В реальном проекте используйте сервис вроде youtube-dl или API
+            // Для примера просто используем URL напрямую (может не работать)
+            player.src = video.url;
+            
+            player.oncanplay = () => {
+                loadingElement.style.display = 'none';
+                player.play().catch(e => console.log("Автовоспроизведение заблокировано:", e));
+            };
+            
+            player.onerror = () => {
+                loadingElement.textContent = 'Ошибка загрузки. Попробуйте другое видео.';
+            };
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            // Создаем эквалайзер
+            initAudio();
+            
+            // Загружаем первое случайное видео
+            loadAudio(getRandomVideo());
+            
+            // Кнопка воспроизведения
+            document.getElementById('play-btn').addEventListener('click', () => {
+                const player = document.getElementById('audio-player');
+                if (player.paused) {
+                    player.play();
+                } else {
+                    player.pause();
+                }
+            });
+            
+            // Кнопка следующего видео
+            document.getElementById('next-btn').addEventListener('click', () => {
+                loadAudio(getRandomVideo());
+            });
+            
+            // Активируем аудио контекст при первом клике
+            document.body.addEventListener('click', () => {
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>

@@ -3,110 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Случайное видео</title>
+    <title>Генератор случайных слов</title>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
             margin: 0;
-            background-color: #f0f0f0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--dark-color);
         }
-        .video-container {
-            width: 80%;
-            max-width: 800px;
-            margin-bottom: 20px;
+        
+        .container {
+            max-width: 600px;
+            width: 90%;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
-        iframe {
-            width: 100%;
-            height: 450px;
-            border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+        
         h1 {
-            color: #333;
+            color: var(--primary-color);
             margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2.2rem;
         }
-        .refresh-btn {
-            padding: 10px 20px;
-            background-color: #4CAF50;
+        
+        #word-display {
+            font-size: 2.5rem;
+            margin: 30px 0;
+            color: var(--secondary-color);
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        #timer {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        button {
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-top: 20px;
         }
-        .refresh-btn:hover {
-            background-color: #45a049;
+        
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .word-container {
+            background-color: var(--light-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            #word-display {
+                font-size: 2rem;
+            }
+            
+            #timer {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Случайное видео</h1>
-    <div class="video-container">
-        <iframe id="rutubePlayer" allowfullscreen></iframe>
+    <div class="container">
+        <h1>Генератор случайных слов</h1>
+        <div class="word-container">
+            <div id="word-display">Загрузка...</div>
+        </div>
+        <div id="timer">03:00</div>
+        <button id="new-word-btn">Новое слово</button>
+        <div class="footer">Таймер запускается автоматически при загрузке нового слова</div>
     </div>
-    <button class="refresh-btn" onclick="loadRandomVideo()">Другое видео</button>
 
     <script>
-        // Массив с ссылками на видео Rutube
-        const videoSources = [
-            "https://rutube.ru/play/embed/ff8ded6bab396bbc45a0170c1b059840",
-            "https://rutube.ru/shorts/2095bc643eaf5a7f91aeced668bdc2d6/",
-             "https://rutube.ru/shorts/ba81596eed3fdcae4874c90585022cba/",
-             "https://rutube.ru/shorts/6199e1416fd4af0333c6d058c925daf6/",
-             "https://rutube.ru/shorts/df439ac88763f1887002c67da534501a/",
-             "https://rutube.ru/shorts/db8660ecd6b33728fc6f0f79d66d9d09/",
-             "https://rutube.ru/shorts/4493dcf49cf507c315c8398e4e1ae45e/",
-             "https://rutube.ru/shorts/821353bc0f487d5e0b741448a9446f64/",
-             "https://rutube.ru/shorts/5906876949c4e7a3bdbda8290699a01b/",
-             "https://rutube.ru/shorts/9be3ee6806443b10c14d1869e3ef65e1/",
-             "https://rutube.ru/shorts/300e275296fa325bd44ad48ac37acd6d/",
-             "https://rutube.ru/shorts/907d704cdaae316346749cc8a124f1fc/",
-             "https://rutube.ru/shorts/a056669e727800ecfd97fc935ab852f7/",
-             "https://rutube.ru/shorts/ef38be84060b69c639b357b4317b6b20/",
-             "https://rutube.ru/shorts/4a986af1a6eb97cd315678e4adc22cb9/",
-             "https://rutube.ru/shorts/b4619a10ef7eb2b8b96992d7763c153a/",
-             "https://rutube.ru/shorts/160630266833460c430ae41edff6683b/",
-             "https://rutube.ru/shorts/160630266833460c430ae41edff6683b/я",
-             "https://rutube.ru/shorts/8cad13c56f1772d943e3b8857631b4e4/",
-             "https://rutube.ru/shorts/ea2a4c4132bb8ae607ac8056f480f741/",
-             "https://rutube.ru/shorts/13ca918b9526a76004ba924179e48190/",
-             "https://rutube.ru/shorts/471a59410a30a5a611a5dd73367bf851/",
-             "https://rutube.ru/shorts/32cb974b98459aa871e4ecdfe2691ade/",
-             "https://rutube.ru/shorts/9a7f8f1074a2040fe8bfe7637da8ef8b/",
-             "https://rutube.ru/shorts/2cc112a74d2d00fdcf29fe651c934bb2/",
-             "https://rutube.ru/shorts/d7ee7390c82e1204644257b713d58c94/",
-             "",
-             "",
-             "",
-             "",
-             "",
-             "",
-             "",
-            
-            // Добавьте сюда другие видео в таком же формате
-            // "https://rutube.ru/play/embed/другой-id-видео",
+        // Список из 500 русских слов
+        const wordList = [
+            "абрикос", "автомобиль", "академия", "алмаз", "апельсин", 
+            "архитектор", "астрономия", "атмосфера", "бабочка", "багет", 
+            "бадминтон", "балалайка", "балкон", "банан", "бархат", 
+            "бегемот", "береза", "библиотека", "благодарность", "блокнот", 
+            "богатство", "ботинок", "браслет", "бриллиант", "брокколи", 
+            "будильник", "букет", "бумага", "бутерброд", "быстрота", 
+            "вагон", "ваза", "валенок", "ванна", "варежка", 
+            "ведро", "велосипед", "верблюд", "весна", "ветер", 
+            "виноград", "виолончель", "витраж", "вкус", "вода", 
+            "воздух", "волшебник", "воробей", "восток", "время", 
+            "встреча", "вулкан", "высота", "галактика", "гамак", 
+            "гардероб", "гастроном", "география", "гербарий", "гигант", 
+            "гитара", "глаз", "глобус", "гнездо", "голова", 
+            "гора", "гордость", "горизонт", "горячий", "градусник", 
+            "грамота", "гречка", "гриб", "гром", "груша", 
+            "губка", "даль", "дача", "дверь", "девочка", 
+            "дедушка", "декабрь", "дельтаплан", "деньги", "дерево", 
+            "десерт", "джунгли", "диван", "дирижабль", "доброта", 
+            "дождь", "дом", "доска", "дракон", "дружба", 
+            "дуб", "духи", "дыня", "дятел", "ежевика", 
+            "ежик", "елка", "ереван", "ерш", "жаворонок", 
+            "жара", "жаркое", "желание", "желудь", "жемчуг", 
+            "жеребенок", "живопись", "жираф", "журнал", "забота", 
+            "завтрак", "закат", "замок", "запах", "зарядка", 
+            "звезда", "зебра", "земляника", "зеркало", "зима", 
+            "золото", "зонт", "игла", "игрушка", "идея", 
+            "изумруд", "иллюминатор", "имя", "инжир", "искра", 
+            "история", "йога", "йогурт", "кабинет", "кавалер", 
+            "кадет", "казан", "кайф", "календарь", "камень", 
+            "каникулы", "капель", "карамель", "картина", "кастрюля", 
+            "каштан", "квартира", "кепка", "кино", "кисть", 
+            "клавиша", "клен", "книга", "ковер", "коктейль", 
+            "колесо", "комета", "конфета", "копилка", "корзина", 
+            "костер", "кошка", "красота", "кресло", "крокодил", 
+            "кружево", "крыльцо", "кувшин", "кукла", "кулинария", 
+            "купол", "лабиринт", "лагерь", "ладонь", "лазер", 
+            "лайм", "лампа", "ландыш", "ласточка", "легенда", 
+            "леденец", "лейка", "лента", "лепесток", "лес", 
+            "лето", "лиана", "лимон", "лист", "лифт", 
+            "лобзик", "лодка", "ложка", "луна", "лыжи", 
+            "любовь", "люстра", "магнит", "майка", "макарон", 
+            "малина", "мандарин", "март", "масло", "матрешка", 
+            "маяк", "мебель", "медведь", "мелодия", "меркурий", 
+            "метель", "мечта", "микрофон", "мимоза", "мирт", 
+            "молния", "молоко", "монета", "море", "мороженое", 
+            "мост", "мотылек", "музыка", "мультфильм", "муравей", 
+            "мяч", "надежда", "наряд", "небо", "нежность", 
+            "нога", "норка", "носок", "ноутбук", "ночь", 
+            "обед", "облако", "обложка", "овес", "огонь", 
+            "одеяло", "ожидание", "океан", "окно", "октябрь", 
+            "олень", "опера", "оранжевый", "орел", "осень", 
+            "осьминог", "открытка", "очаг", "павильон", "пазл", 
+            "пакет", "пальма", "память", "панорама", "папоротник", 
+            "парк", "парус", "пасека", "паутина", "певец", 
+            "печенье", "пианино", "пингвин", "пирог", "письмо", 
+            "планета", "плед", "победа", "повар", "подушка", 
+            "поезд", "поколение", "полка", "помощь", "попугай", 
+            "портрет", "посылка", "поцелуй", "поэзия", "правда", 
+            "премия", "привет", "принцесса", "пробуждение", "прогулка", 
+            "пряник", "пчела", "пшеница", "пуговица", "пудель", 
+            "путешествие", "пьеса", "пятно", "работа", "радуга", 
+            "разноцветный", "ракета", "рамка", "расстояние", "ребус", 
+            "ревень", "регистр", "река", "рельс", "ресторан", 
+            "рисунок", "робот", "роза", "роман", "рояль", 
+            "рубашка", "рука", "рулет", "рыбак", "рюкзак", 
+            "садовник", "салют", "самолет", "сандалия", "сапфир", 
+            "сарафан", "сахар", "свеча", "свитер", "свобода", 
+            "связь", "север", "секрет", "семья", "сердце", 
+            "сирень", "сказка", "скворец", "скрипка", "слава", 
+            "слон", "смех", "снег", "собака", "сова", 
+            "солнце", "сорока", "соус", "спичка", "стакан", 
+            "стена", "стихи", "стол", "страна", "стул", 
+            "суббота", "сумка", "суп", "сухарь", "счастье", 
+            "таблица", "танец", "тарелка", "творог", "театр", 
+            "телевизор", "телефон", "теннис", "тетрадь", "тигр", 
+            "тополь", "торт", "трава", "треугольник", "трон", 
+            "труба", "туман", "туфля", "тыква", "тюльпан", 
+            "удача", "удивление", "ужин", "узор", "указка", 
+            "улей", "улыбка", "умение", "университет", "упаковка", 
+            "урок", "усадьба", "утка", "ухо", "учеба", 
+            "уют", "фабрика", "факел", "фантазия", "фартук", 
+            "февраль", "фейерверк", "фиалка", "фигура", "фильм", 
+            "флаг", "флейта", "фонарь", "формула", "фотоаппарат", 
+            "футбол", "халат", "хвост", "хлеб", "хлопок", 
+            "хобби", "хоккей", "хор", "художник", "цветок", 
+            "цель", "цирк", "часы", "человек", "черника", 
+            "четверг", "чистота", "читатель", "чудо", "шалаш", 
+            "шампунь", "шарф", "шахматы", "швейцар", "шепот", 
+            "шиповник", "шкаф", "школа", "шоколад", "штора", 
+            "шуба", "щебет", "щенок", "щетка", "эвкалипт", 
+            "экватор", "электричество", "эльф", "эмоция", "энциклопедия", 
+            "эскимо", "эстафета", "этаж", "эхо", "юбка", 
+            "юла", "юмор", "юность", "юрист", "яблоко", 
+            "ягода", "яйцо", "якорь", "январь", "яркость", 
+            "ясень", "ящерица", "ящик"
         ];
 
-        function getRandomVideo() {
-            const randomIndex = Math.floor(Math.random() * videoSources.length);
-            return videoSources[randomIndex];
+        let timer;
+        let timeLeft = 180; // 3 минуты в секундах
+
+        function getRandomWord() {
+            const randomIndex = Math.floor(Math.random() * wordList.length);
+            return wordList[randomIndex];
         }
 
-        function loadRandomVideo() {
-            const iframe = document.getElementById('rutubePlayer');
-            const randomVideoSrc = getRandomVideo();
+        function displayNewWord() {
+            const wordDisplay = document.getElementById('word-display');
+            wordDisplay.textContent = getRandomWord();
+            startTimer();
             
-            // Формируем правильный URL для встраивания
-            iframe.src = randomVideoSrc + "?autoplay=1";
+            // Анимация появления слова
+            wordDisplay.style.animation = 'none';
+            void wordDisplay.offsetWidth; // Trigger reflow
+            wordDisplay.style.animation = 'fadeIn 0.5s ease-out';
         }
 
-        // Загружаем случайное видео при загрузке страницы
-        window.onload = loadRandomVideo;
+        function startTimer() {
+            // Сброс предыдущего таймера
+            clearInterval(timer);
+            timeLeft = 180;
+            updateTimerDisplay();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    const wordDisplay = document.getElementById('word-display');
+                    wordDisplay.textContent = wordDisplay.textContent + " - время вышло!";
+                    wordDisplay.style.color = "var(--accent-color)";
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const timerElement = document.getElementById('timer');
+            
+            // Изменение цвета при приближении к концу времени
+            if (timeLeft <= 30) {
+                timerElement.style.color = "var(--accent-color)";
+                timerElement.style.fontWeight = "bold";
+            } else {
+                timerElement.style.color = "var(--primary-color)";
+            }
+            
+            timerElement.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Добавляем CSS анимацию
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Инициализация при загрузке страницы
+        window.onload = displayNewWord;
+
+        // Кнопка для нового слова
+        document.getElementById('new-word-btn').addEventListener('click', displayNewWord);
     </script>
 </body>
 </html>
